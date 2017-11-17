@@ -38,6 +38,7 @@ def create(vm_name):
 
 @cli.command('destroy')
 @click.argument('vm_name')
+@click.confirmation_option(help='Are you sure you want to destroy this VM?')
 def destroy(vm_name):
     """ Destroys a VM """
     myvm = VM(vm_name)
