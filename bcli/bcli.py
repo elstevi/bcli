@@ -1,9 +1,31 @@
 import click
+from collections import OrderedDict
 from libbhyve.vm import VM
+from libbhyve.config import VM_DIR
+from os import listdir
+from tabulate import tabulate
 
 @click.group()
 def cli():
     """ Manages libbhyve vm's """
+
+@cli.command('list')
+@click.option('--tablefmt', prompt=False, required=False, default='grid')
+def list(tablefmt):
+    """ Lists all virtual machines and their status """
+    all_vms = listdir(VM_DIR)
+    vms = [] 
+    i = 0
+    for vm_name in all_vms:
+        thisvm = VM(vm_name)
+        vms.append(OrderedDict([
+                ('name', thisvm.name),
+                ('status', thisvm.status()),
+                ('ncpus', thisvm.ncpus),
+                ('memory', thisvm.memory),
+                ]))
+        i = i+1
+    click.echo(tabulate(vms, headers='keys', tablefmt=tablefmt))
 
 @cli.command('create')
 @click.argument('vm_name')
