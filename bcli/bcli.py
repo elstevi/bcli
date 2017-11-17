@@ -1,6 +1,8 @@
 import click
 from collections import OrderedDict
 from libbhyve.vm import VM
+from libbhyve.disk import Disk
+from libbhyve.nic import Nic
 from libbhyve.config import VM_DIR
 from os import listdir
 from tabulate import tabulate
@@ -28,13 +30,32 @@ def list(tablefmt):
     click.echo(tabulate(vms, headers='keys', tablefmt=tablefmt))
 
 @cli.command('create')
-@click.argument('vm_name')
-def create(vm_name):
+@click.option('--com1', default='stdio')
+@click.option('--com2', default=None)
+@click.option('--disk', multiple=True, prompt=True)
+@click.option('--iso', default=None)
+@click.option('--memory', default=1024)
+@click.option('--name', prompt=True)
+@click.option('--ncpus', default=1)
+@click.option('--network', prompt=True, multiple=True)
+@click.option('--onboot/--offboot', prompt=True, default=False)
+def create(name, onboot, com1, com2, disk, iso, memory, ncpus, network):
     """ Creates a VM """
-    myvm = VM('base.conf')
-    myvm.name = vm_name
+    myvm = VM(None)
+    myvm.name = name
+    myvm.auto_start = onboot
+    myvm.com1 = com1
+    myvm.com2 = com2
+    myvm.iso  = iso
+    myvm.memory  = memory
+    myvm.ncpus  = ncpus
+    for disc in disk:
+        myvm.disk.append(Disk(disc, 'ahci-hd'))
+    for nic in network:
+        myvm.network.append(Nic(nic, 'virtio-net'))
     myvm.save()
     click.echo("VM Created")
+
 
 @cli.command('destroy')
 @click.argument('vm_name')
